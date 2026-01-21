@@ -13,6 +13,7 @@ services:
       DYAD_PROXY_PORT_MAX: "${DYAD_PROXY_PORT_MAX:-50100}"
       DYAD_USE_NPM: "true"
       NODE_ENV: "production"
+      NODE_OPTIONS: "${NODE_OPTIONS:---max-old-space-size=4096}"
     volumes:
       - "${DYAD_HOST_DATA_PATH:-./dyad-data}:/data/dyad"
     ports:
