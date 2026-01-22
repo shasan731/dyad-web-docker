@@ -50,8 +50,14 @@ cp .env.example .env
 # edit .env to match your server IP and ports
 docker compose up -d
 ```
+The compose file includes a health check, restart policy, and log rotation defaults.
 
 Linux host networking (avoids binding full preview port ranges):
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.host.yml up -d --build
 ```
+
+### Compose Mode Differences
+
+- `docker compose up -d` uses `docker-compose.yml` only, running in the default bridge network with explicit port mappings (web port plus the preview proxy range).
+- `docker compose -f docker-compose.yml -f docker-compose.host.yml up -d --build` enables `network_mode: host`, so the container uses the host network stack (no port mapping needed) and forces an image rebuild.

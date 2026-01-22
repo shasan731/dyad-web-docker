@@ -169,6 +169,37 @@ function getDefaultCommand(appId: number): string {
   }
   return `(pnpm install && pnpm run dev --port ${port}) || (npm install --legacy-peer-deps && npm run dev -- --port ${port})`;
 }
+
+function validatePackageJson({
+  appPath,
+  appId,
+  event,
+}: {
+  appPath: string;
+  appId: number;
+  event: IpcMainInvokeEvent;
+}) {
+  const packageJsonPath = path.join(appPath, "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    return;
+  }
+  try {
+    const contents = fs.readFileSync(packageJsonPath, "utf8");
+    JSON.parse(contents);
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+    const message = `Invalid package.json for app ${appId}. Fix JSON syntax before running the app. Error: ${errorMessage}`;
+    logger.error(message);
+    safeSend(event.sender, "app:output", {
+      type: "stderr",
+      message,
+      appId,
+      timestamp: Date.now(),
+    });
+    throw new Error(message);
+  }
+}
 async function copyDir(
   source: string,
   destination: string,
@@ -217,6 +248,7 @@ async function executeApp({
     proxyWorker.terminate();
     proxyWorker = null;
   }
+  validatePackageJson({ appPath, appId, event });
   const settings = readSettings();
   const runtimeMode = settings.runtimeMode2 ?? "host";
 

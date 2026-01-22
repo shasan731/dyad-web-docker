@@ -7,8 +7,10 @@ import { useSettings } from "@/hooks/useSettings";
 
 export function ChatInputControls({
   showContextFilesPicker = false,
+  showProModeSelector = true,
 }: {
   showContextFilesPicker?: boolean;
+  showProModeSelector?: boolean;
 }) {
   const { settings } = useSettings();
 
@@ -23,9 +25,13 @@ export function ChatInputControls({
       )}
       <div className="w-1.5"></div>
       <ModelPicker />
-      <div className="w-1.5"></div>
-      <ProModeSelector />
-      <div className="w-1"></div>
+      {showProModeSelector && (
+        <>
+          <div className="w-1.5"></div>
+          <ProModeSelector />
+          <div className="w-1"></div>
+        </>
+      )}
       {showContextFilesPicker && (
         <>
           <ContextFilesPicker />

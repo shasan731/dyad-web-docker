@@ -41,7 +41,11 @@ type NodeInstallStep =
   | "continue-processing"
   | "finished-checking";
 
-export function SetupBanner() {
+export function SetupBanner({
+  hideDyadProCard = false,
+}: {
+  hideDyadProCard?: boolean;
+} = {}) {
   const posthog = usePostHog();
   const navigate = useNavigate();
   const [isOnboardingVisible, setIsOnboardingVisible] = useState(true);
@@ -386,18 +390,24 @@ export function SetupBanner() {
                 />
               </div>
 
-              <SetupProviderCard
-                className="mt-2"
-                variant="dyad"
-                onClick={handleDyadProSetupClick}
-                tabIndex={isNodeSetupComplete ? 0 : -1}
-                leadingIcon={
-                  <img src={logo} alt="Dyad Logo" className="w-6 h-6 mr-0.5" />
-                }
-                title="Setup Dyad Pro"
-                subtitle="Access all AI models with one plan"
-                chip={<>Recommended</>}
-              />
+              {!hideDyadProCard && (
+                <SetupProviderCard
+                  className="mt-2"
+                  variant="dyad"
+                  onClick={handleDyadProSetupClick}
+                  tabIndex={isNodeSetupComplete ? 0 : -1}
+                  leadingIcon={
+                    <img
+                      src={logo}
+                      alt="Dyad Logo"
+                      className="w-6 h-6 mr-0.5"
+                    />
+                  }
+                  title="Setup Dyad Pro"
+                  subtitle="Access all AI models with one plan"
+                  chip={<>Recommended</>}
+                />
+              )}
 
               <div
                 className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors"

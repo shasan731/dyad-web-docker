@@ -140,6 +140,7 @@ docker run -p 4000:4000 dyad-web
 ```bash
 docker compose up -d
 ```
+The included `docker-compose.yml` enables automatic restarts, log rotation, and a basic health check.
 
 ### Deploy to cloud
 Works with any Docker hosting:

@@ -108,6 +108,10 @@ async function main() {
   const app = express();
   app.use(express.json({ limit: "200mb" }));
 
+  app.get("/api/health", (_req, res) => {
+    res.json({ ok: true, uptime: process.uptime() });
+  });
+
   app.post("/api/ipc/invoke", async (req, res) => {
     const { channel, args, clientId } = req.body || {};
     if (!channel || typeof channel !== "string") {
@@ -217,6 +221,38 @@ async function main() {
   server.listen(port, host, () => {
     console.log(`[dyad-web] server listening on http://${host}:${port}`);
   });
+
+  let isShuttingDown = false;
+  const shutdown = (signal: string) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.log(`[dyad-web] received ${signal}, shutting down...`);
+    for (const socket of clientSockets.values()) {
+      try {
+        socket.close();
+      } catch {
+        // Ignore close errors during shutdown.
+      }
+    }
+    for (const stream of clientStreams.values()) {
+      try {
+        stream.end();
+      } catch {
+        // Ignore close errors during shutdown.
+      }
+    }
+    wss.close();
+    server.close(() => {
+      process.exit(0);
+    });
+    const timeout = setTimeout(() => {
+      process.exit(0);
+    }, 10_000);
+    timeout.unref?.();
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 main().catch((error) => {

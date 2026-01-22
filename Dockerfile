@@ -19,4 +19,7 @@ ENV DYAD_DATA_PATH=/data/dyad
 
 EXPOSE 4000
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "const http=require('http');const req=http.get('http://127.0.0.1:4000/api/health',res=>{process.exit(res.statusCode===200?0:1)});req.on('error',()=>process.exit(1));"
+
 CMD ["npm", "run", "web:server"]

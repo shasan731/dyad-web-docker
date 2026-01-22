@@ -7,6 +7,7 @@ import path from "node:path";
 import { safeJoin } from "../utils/path_utils";
 
 import log from "@/utils/simple_logger";
+import { jsonrepair } from "jsonrepair";
 import { executeAddDependency } from "./executeAddDependency";
 import {
   deleteSupabaseFunction,
@@ -48,6 +49,37 @@ const logger = log.scope("response_processor");
 interface Output {
   message: string;
   error: unknown;
+}
+
+function describeError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.stack ? `${error.message}\n${error.stack}` : error.message;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
+function normalizePackageJsonContent(filePath: string, content: string): string {
+  try {
+    JSON.parse(content);
+    return content;
+  } catch (error) {
+    try {
+      const repaired = jsonrepair(content);
+      const parsed = JSON.parse(repaired);
+      logger.warn(
+        `Repaired invalid JSON in ${filePath}. Original error: ${describeError(error)}`,
+      );
+      return JSON.stringify(parsed, null, 2) + "\n";
+    } catch (repairError) {
+      throw new Error(
+        `Invalid JSON in ${filePath}: ${describeError(repairError)}`,
+      );
+    }
+  }
 }
 
 export async function dryRunSearchReplace({
@@ -453,6 +485,10 @@ export async function processFullResponseActions(
         }
       }
 
+      if (filePath.endsWith("package.json") && typeof content === "string") {
+        content = normalizePackageJsonContent(filePath, content);
+      }
+
       // Ensure directory exists
       const dirPath = path.dirname(fullFilePath);
       fs.mkdirSync(dirPath, { recursive: true });
@@ -604,8 +640,9 @@ export async function processFullResponseActions(
       extraFilesError,
     };
   } catch (error: unknown) {
-    logger.error("Error processing files:", error);
-    return { error: (error as any).toString() };
+    const errorMessage = describeError(error);
+    logger.error("Error processing files:", errorMessage);
+    return { error: errorMessage };
   } finally {
     const appendedContent = `
     ${warnings

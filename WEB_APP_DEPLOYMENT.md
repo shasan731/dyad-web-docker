@@ -179,6 +179,9 @@ The `vercel.json` configuration:
 ### Issue: "WebSocket connection failed"
 **Solution**: Vercel doesn't support persistent WebSocket. The SSE fallback in `api/ipc/events.js` provides basic event streaming. For production, use Socket.io with HTTP polling fallback.
 
+### Issue: "Invalid package.json" when running an app
+**Solution**: Ensure the generated app's `package.json` is valid JSON (no comments or trailing commas). The server validates this before running and will surface the error in the app logs.
+
 ## Testing
 
 ```bash
